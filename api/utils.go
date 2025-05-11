@@ -13,7 +13,7 @@ import (
 func getUserIDHeaderValue(c *fiber.Ctx) (string, error) {
 	userID := c.Get("X-User-ID")
 	if userID == "" {
-		return "", errors.New("mandatory header user-id not provided")
+		return "", errors.New("mandatory header X-User-ID not provided")
 	}
 	return userID, nil
 }

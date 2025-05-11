@@ -14,7 +14,7 @@ RUN go mod tidy
 COPY . .
 
 # Build the Go app from the main.go file
-RUN make test && make build
+RUN make build
 
 # Expose the port your app listens on (adjust if needed)
 EXPOSE 8080

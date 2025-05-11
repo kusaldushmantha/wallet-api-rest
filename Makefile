@@ -18,7 +18,7 @@ run:
 
 # Run tests
 test:
-	go test ./...
+	go test ./... -count=1
 
 # Clean up generated files
 clean:
