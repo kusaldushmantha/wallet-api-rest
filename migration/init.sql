@@ -36,3 +36,23 @@ VALUES ('7dbacf5d-3099-4a66-ad3d-2fee93970017', '0a644be3-cdf9-4491-b4ba-1cd8974
 INSERT INTO wallets(id, user_id)
 VALUES ('2cbcd158-56d2-4d45-8113-d51adf9ef57a', 'abe1f04a-68df-4e13-bd0d-5365ca9fdb0e');
 
+CREATE
+OR REPLACE FUNCTION check_positive_wallet_balance()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Ensure balance cannot go negative after the update
+    IF
+NEW.balance < 0 THEN
+        RAISE EXCEPTION 'Balance cannot be negative';
+END IF;
+RETURN NEW;
+END;
+$$
+LANGUAGE plpgsql;
+
+CREATE TRIGGER balance_check
+    BEFORE UPDATE
+    ON wallets
+    FOR EACH ROW
+    EXECUTE FUNCTION check_positive_wallet_balance();
+
