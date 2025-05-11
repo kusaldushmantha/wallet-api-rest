@@ -1,0 +1,23 @@
+meta {
+  name: TRANSFER
+  type: http
+  seq: 6
+}
+
+post {
+  url: http://localhost:8000/wallet/v1/7dbacf5d-3099-4a66-ad3d-2fee93970017/transfer
+  body: json
+  auth: inherit
+}
+
+headers {
+  user-id: 0a644be3-cdf9-4491-b4ba-1cd8974c0278
+}
+
+body:json {
+  {
+    "amount":100,
+    "recipient_wallet_id": "2cbcd158-56d2-4d45-8113-d51adf9ef57a",
+    "idempotency_token": "gggg"
+  }
+}

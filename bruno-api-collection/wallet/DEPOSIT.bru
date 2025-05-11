@@ -1,0 +1,22 @@
+meta {
+  name: DEPOSIT
+  type: http
+  seq: 5
+}
+
+post {
+  url: http://localhost:8000/wallet/v1/7dbacf5d-3099-4a66-ad3d-2fee93970017/deposit
+  body: json
+  auth: inherit
+}
+
+headers {
+  user-id: 0a644be3-cdf9-4491-b4ba-1cd8974c0278
+}
+
+body:json {
+  {
+    "amount": 250,
+    "idempotency_token": "ccc"
+  }
+}

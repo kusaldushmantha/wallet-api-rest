@@ -1,0 +1,36 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.out
+
+# Output of the go coverage tool
+*.coverprofile
+
+# Go workspace file
+go.work
+go.work.sum
+
+# Dependency directories (Go Modules)
+vendor/
+
+# Logs
+*.log
+
+# IDE files
+.idea/
+*.iml
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Redis dump file (optional, if you're using Redis locally)
+dump.rdb
+
+# Temporary files
+tmp/
+*.tmp
+*.swp

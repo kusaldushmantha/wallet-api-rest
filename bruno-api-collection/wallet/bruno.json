@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "wallet",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}
