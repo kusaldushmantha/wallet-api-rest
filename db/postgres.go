@@ -121,6 +121,20 @@ func (p *postgresDB) InsertTxnAndGetWalletBalance(ctx context.Context, fromAccou
 		}
 	}()
 
+	// Check the balance of the source wallet
+	var balance float64
+	query := "SELECT balance FROM wallets WHERE id = $1 FOR UPDATE"
+	row := tx.QueryRowContext(ctx, query, fromAccount)
+	err = row.Scan(&balance)
+	if err != nil {
+		log.Errorf("transaction select error. from: %s | to: %s, amount: %f | type: %s | time: %s | error: %+v", fromAccount, toAccount, amount, trsType, time.Now(), err)
+		return -1, err
+	}
+
+	if (trsType == commons.TransactionTypeWithdraw || trsType == commons.TransactionTypeTransfer) && balance < amount {
+		return -1, commons.InsufficientBalanceError
+	}
+
 	// Insert transaction
 	err = p.addTransactionRecord(tx, ctx, fromAccount, toAccount, amount, trsType)
 	if err != nil {
@@ -143,7 +157,7 @@ func (p *postgresDB) InsertTxnAndGetWalletBalance(ctx context.Context, fromAccou
 		}
 	}
 	// Update sender balance and return it
-	balance, err := p.updateAndGetWalletBalance(tx, ctx, fromAccount, senderAmount)
+	balance, err = p.updateAndGetWalletBalance(tx, ctx, fromAccount, senderAmount)
 	if err != nil {
 		log.Errorf("update sender wallet error. from: %s | to: %s, amount: %f | type: %s | time: %s | error: %+v", fromAccount, toAccount, amount, trsType, time.Now(), err)
 		return balance, err

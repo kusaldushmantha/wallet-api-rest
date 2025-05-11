@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -58,6 +59,9 @@ func (v *walletServiceV1) Deposit(ctx context.Context, idempotencyKey, account s
 
 	updatedBalance, err := v.DB.InsertTxnAndGetWalletBalance(ctx, account, "", amount, commons.TransactionTypeDeposit)
 	if err != nil {
+		if errors.Is(err, commons.InsufficientBalanceError) {
+			return badRequest(err.Error())
+		}
 		return internalError("failed to record the deposit transaction", err)
 	}
 
@@ -97,15 +101,12 @@ func (v *walletServiceV1) Withdraw(ctx context.Context, idempotencyKey, account 
 		return duplicateRequestResponse()
 	}
 
-	if ok, err := v.hasSufficientBalance(ctx, account, amount); err != nil {
-		return internalError("failed to check balance", err)
-	} else if !ok {
-		return badRequest("insufficient funds to withdraw")
-	}
-
 	updatedBalance, err := v.DB.InsertTxnAndGetWalletBalance(ctx, account, "", amount, commons.TransactionTypeWithdraw)
 	if err != nil {
-		return internalError("failed to record the withdrawal transaction", err)
+		if errors.Is(err, commons.InsufficientBalanceError) {
+			return badRequest(err.Error())
+		}
+		return internalError("failed to perform the withdrawal transaction", err)
 	}
 
 	return successBalanceResponse(account, updatedBalance, "withdrawal successful")
@@ -149,12 +150,6 @@ func (v *walletServiceV1) Transfer(ctx context.Context, idempotencyKey, fromAcco
 		return duplicateRequestResponse()
 	}
 
-	if ok, err := v.hasSufficientBalance(ctx, fromAccount, amount); err != nil {
-		return internalError("failed to check balance", err)
-	} else if !ok {
-		return badRequest("insufficient funds to transfer")
-	}
-
 	if exists, err := v.walletExists(ctx, toAccount); err != nil {
 		return internalError("failed to verify recipient wallet", err)
 	} else if !exists {
@@ -163,6 +158,9 @@ func (v *walletServiceV1) Transfer(ctx context.Context, idempotencyKey, fromAcco
 
 	updatedBalance, err := v.DB.InsertTxnAndGetWalletBalance(ctx, fromAccount, toAccount, amount, commons.TransactionTypeTransfer)
 	if err != nil {
+		if errors.Is(err, commons.InsufficientBalanceError) {
+			return badRequest(err.Error())
+		}
 		return internalError("failed to record the transfer transaction", err)
 	}
 
@@ -267,15 +265,6 @@ func (v *walletServiceV1) setIdempotency(ctx context.Context, key string, action
 	}
 	// SetWithExpirationIfKeyIsNotSet returns true if the key is set, so here we have to return false
 	return !ok, err
-}
-
-func (v *walletServiceV1) hasSufficientBalance(ctx context.Context, walletID string, required float64) (bool, error) {
-	balance, err := v.DB.GetWalletBalance(ctx, walletID)
-	if err != nil {
-		log.Errorf("balance check failed for wallet '%s': %v", walletID, err)
-		return false, err
-	}
-	return balance >= required, nil
 }
 
 func (v *walletServiceV1) walletExists(ctx context.Context, walletID string) (bool, error) {

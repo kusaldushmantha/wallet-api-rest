@@ -22,21 +22,21 @@ services:
     volumes:
       - redisdata:/data
 
-  wallet-app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: wallet-app
-    ports:
-      - "8080:8080"
-    env_file:
-      - .env.docker  # optional, remove this line if you don't use it
-    restart: unless-stopped
-    environment:
-      - GO_ENV=docker
-    depends_on:
-      - redis
-      - postgres
+#  wallet-app:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#    container_name: wallet-app
+#    ports:
+#      - "8080:8080"
+#    env_file:
+#      - .env.docker  # optional, remove this line if you don't use it
+#    restart: unless-stopped
+#    environment:
+#      - GO_ENV=docker
+#    depends_on:
+#      - redis
+#      - postgres
 
 volumes:
   pgdata:

@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
+	"WalletApp/commons"
 	mocks2 "WalletApp/db/mocks"
 	"WalletApp/models"
 	"WalletApp/models/responses"
@@ -180,35 +181,19 @@ func TestWalletServiceV1_Withdraw(t *testing.T) {
 		assert.Equal(t, "test db error", resp.Error.Error())
 	})
 
-	t.Run("should return internal server error response upon errors when checking the account balance", func(t *testing.T) {
+	t.Run("should return bad request response if the wallet balance is less than the amount", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		databaseMock := mocks2.NewMockDatabase(ctrl)
 		cacheMock := mocks2.NewMockCache(ctrl)
 		walletService := walletServiceV1{DB: databaseMock, Cache: cacheMock}
 		databaseMock.EXPECT().CheckWalletOwner(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
-		databaseMock.EXPECT().GetWalletBalance(gomock.Any(), gomock.Any()).Return(-1.0, errors.New("test db error"))
-		cacheMock.EXPECT().SetWithExpirationIfKeyIsNotSet(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
-		resp := walletService.Withdraw(context.Background(), idempotencyKey, walletID, amount, userID)
-		assert.NotNil(t, resp)
-		assert.Equal(t, http.StatusInternalServerError, resp.Status)
-		assert.Equal(t, "failed to check balance", resp.Message)
-		assert.Equal(t, "test db error", resp.Error.Error())
-	})
-
-	t.Run("should return bad request response upon if there is insufficient funds in the wallet", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-		databaseMock := mocks2.NewMockDatabase(ctrl)
-		cacheMock := mocks2.NewMockCache(ctrl)
-		walletService := walletServiceV1{DB: databaseMock, Cache: cacheMock}
-		databaseMock.EXPECT().CheckWalletOwner(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
-		databaseMock.EXPECT().GetWalletBalance(gomock.Any(), gomock.Any()).Return(amount-1, nil)
+		databaseMock.EXPECT().InsertTxnAndGetWalletBalance(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(-1.0, commons.InsufficientBalanceError)
 		cacheMock.EXPECT().SetWithExpirationIfKeyIsNotSet(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
 		resp := walletService.Withdraw(context.Background(), idempotencyKey, walletID, amount, userID)
 		assert.NotNil(t, resp)
 		assert.Equal(t, http.StatusBadRequest, resp.Status)
-		assert.Equal(t, "insufficient funds to withdraw", resp.Message)
+		assert.Equal(t, "insufficient balance error", resp.Message)
 	})
 
 	t.Run("should return success response after successfully recording the transaction", func(t *testing.T) {
@@ -219,7 +204,6 @@ func TestWalletServiceV1_Withdraw(t *testing.T) {
 		cacheMock := mocks2.NewMockCache(ctrl)
 		walletService := walletServiceV1{DB: databaseMock, Cache: cacheMock}
 		databaseMock.EXPECT().CheckWalletOwner(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
-		databaseMock.EXPECT().GetWalletBalance(gomock.Any(), gomock.Any()).Return(amount, nil)
 		databaseMock.EXPECT().InsertTxnAndGetWalletBalance(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(amount, nil)
 		cacheMock.EXPECT().SetWithExpirationIfKeyIsNotSet(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
 
@@ -244,7 +228,6 @@ func TestWalletServiceV1_Withdraw(t *testing.T) {
 		cacheMock := mocks2.NewMockCache(ctrl)
 		walletService := walletServiceV1{DB: databaseMock, Cache: cacheMock}
 		databaseMock.EXPECT().CheckWalletOwner(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
-		databaseMock.EXPECT().GetWalletBalance(gomock.Any(), gomock.Any()).Return(amount, nil)
 		databaseMock.EXPECT().InsertTxnAndGetWalletBalance(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(-1.0, errors.New("test db error"))
 		cacheMock.EXPECT().SetWithExpirationIfKeyIsNotSet(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
 
@@ -252,7 +235,7 @@ func TestWalletServiceV1_Withdraw(t *testing.T) {
 
 		assert.NotNil(t, resp)
 		assert.Equal(t, http.StatusInternalServerError, resp.Status)
-		assert.Equal(t, "failed to record the withdrawal transaction", resp.Message)
+		assert.Equal(t, "failed to perform the withdrawal transaction", resp.Message)
 		assert.Equal(t, "test db error", resp.Error.Error())
 	})
 }
@@ -285,6 +268,22 @@ func TestWalletServiceV1_Transfer(t *testing.T) {
 		assert.NotNil(t, resp)
 		assert.Equal(t, http.StatusUnauthorized, resp.Status)
 		assert.Equal(t, "unauthorized access to the wallet", resp.Message)
+	})
+
+	t.Run("should return bad request response if the wallet balance is less than the amount", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		databaseMock := mocks2.NewMockDatabase(ctrl)
+		cacheMock := mocks2.NewMockCache(ctrl)
+		walletService := walletServiceV1{DB: databaseMock, Cache: cacheMock}
+		databaseMock.EXPECT().CheckWalletOwner(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
+		databaseMock.EXPECT().InsertTxnAndGetWalletBalance(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(-1.0, commons.InsufficientBalanceError)
+		cacheMock.EXPECT().SetWithExpirationIfKeyIsNotSet(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
+		databaseMock.EXPECT().GetWallet(gomock.Any(), gomock.Any()).Return(&models.Wallet{}, nil)
+		resp := walletService.Transfer(context.Background(), idempotencyKey, fromAccount, toAccount, amount, userID)
+		assert.NotNil(t, resp)
+		assert.Equal(t, http.StatusBadRequest, resp.Status)
+		assert.Equal(t, "insufficient balance error", resp.Message)
 	})
 
 	t.Run("should return internal server error upon errors when checking the wallet ownership", func(t *testing.T) {
@@ -329,22 +328,6 @@ func TestWalletServiceV1_Transfer(t *testing.T) {
 		assert.Equal(t, "test db error", resp.Error.Error())
 	})
 
-	t.Run("should return internal server error response upon errors when checking the account balance", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-		databaseMock := mocks2.NewMockDatabase(ctrl)
-		cacheMock := mocks2.NewMockCache(ctrl)
-		walletService := walletServiceV1{DB: databaseMock, Cache: cacheMock}
-		databaseMock.EXPECT().CheckWalletOwner(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
-		databaseMock.EXPECT().GetWalletBalance(gomock.Any(), gomock.Any()).Return(-1.0, errors.New("test db error"))
-		cacheMock.EXPECT().SetWithExpirationIfKeyIsNotSet(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
-		resp := walletService.Transfer(context.Background(), idempotencyKey, fromAccount, toAccount, amount, userID)
-		assert.NotNil(t, resp)
-		assert.Equal(t, http.StatusInternalServerError, resp.Status)
-		assert.Equal(t, "failed to check balance", resp.Message)
-		assert.Equal(t, "test db error", resp.Error.Error())
-	})
-
 	t.Run("should return internal server error response upon errors when checking the recipient wallet existence", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
@@ -353,7 +336,6 @@ func TestWalletServiceV1_Transfer(t *testing.T) {
 		walletService := walletServiceV1{DB: databaseMock, Cache: cacheMock}
 		databaseMock.EXPECT().CheckWalletOwner(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
 		databaseMock.EXPECT().GetWallet(gomock.Any(), gomock.Any()).Return(nil, errors.New("test db error"))
-		databaseMock.EXPECT().GetWalletBalance(gomock.Any(), gomock.Any()).Return(amount+1, nil)
 		cacheMock.EXPECT().SetWithExpirationIfKeyIsNotSet(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
 		resp := walletService.Transfer(context.Background(), idempotencyKey, fromAccount, toAccount, amount, userID)
 		assert.NotNil(t, resp)
@@ -370,27 +352,11 @@ func TestWalletServiceV1_Transfer(t *testing.T) {
 		walletService := walletServiceV1{DB: databaseMock, Cache: cacheMock}
 		databaseMock.EXPECT().CheckWalletOwner(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
 		databaseMock.EXPECT().GetWallet(gomock.Any(), gomock.Any()).Return(nil, nil)
-		databaseMock.EXPECT().GetWalletBalance(gomock.Any(), gomock.Any()).Return(amount+1, nil)
 		cacheMock.EXPECT().SetWithExpirationIfKeyIsNotSet(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
 		resp := walletService.Transfer(context.Background(), idempotencyKey, fromAccount, toAccount, amount, userID)
 		assert.NotNil(t, resp)
 		assert.Equal(t, http.StatusBadRequest, resp.Status)
 		assert.Equal(t, "recipient wallet id does not exist", resp.Message)
-	})
-
-	t.Run("should return bad request response upon if there is insufficient funds in the wallet", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-		databaseMock := mocks2.NewMockDatabase(ctrl)
-		cacheMock := mocks2.NewMockCache(ctrl)
-		walletService := walletServiceV1{DB: databaseMock, Cache: cacheMock}
-		databaseMock.EXPECT().CheckWalletOwner(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
-		databaseMock.EXPECT().GetWalletBalance(gomock.Any(), gomock.Any()).Return(amount-1, nil)
-		cacheMock.EXPECT().SetWithExpirationIfKeyIsNotSet(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
-		resp := walletService.Transfer(context.Background(), idempotencyKey, fromAccount, toAccount, amount, userID)
-		assert.NotNil(t, resp)
-		assert.Equal(t, http.StatusBadRequest, resp.Status)
-		assert.Equal(t, "insufficient funds to transfer", resp.Message)
 	})
 
 	t.Run("should return success response after successfully recording the transaction", func(t *testing.T) {
@@ -401,7 +367,6 @@ func TestWalletServiceV1_Transfer(t *testing.T) {
 		cacheMock := mocks2.NewMockCache(ctrl)
 		walletService := walletServiceV1{DB: databaseMock, Cache: cacheMock}
 		databaseMock.EXPECT().CheckWalletOwner(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
-		databaseMock.EXPECT().GetWalletBalance(gomock.Any(), gomock.Any()).Return(amount, nil)
 		databaseMock.EXPECT().GetWallet(gomock.Any(), gomock.Any()).Return(&models.Wallet{}, nil)
 		databaseMock.EXPECT().InsertTxnAndGetWalletBalance(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(amount, nil)
 		cacheMock.EXPECT().SetWithExpirationIfKeyIsNotSet(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
@@ -427,7 +392,6 @@ func TestWalletServiceV1_Transfer(t *testing.T) {
 		cacheMock := mocks2.NewMockCache(ctrl)
 		walletService := walletServiceV1{DB: databaseMock, Cache: cacheMock}
 		databaseMock.EXPECT().CheckWalletOwner(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
-		databaseMock.EXPECT().GetWalletBalance(gomock.Any(), gomock.Any()).Return(amount, nil)
 		databaseMock.EXPECT().GetWallet(gomock.Any(), gomock.Any()).Return(&models.Wallet{}, nil)
 		databaseMock.EXPECT().InsertTxnAndGetWalletBalance(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(-1.0, errors.New("test db error"))
 		cacheMock.EXPECT().SetWithExpirationIfKeyIsNotSet(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
