@@ -154,5 +154,24 @@ curl --request GET \
 ```
 
 ## Design Decisions
-* API authentication not implemented. Therefore, wallet and user association is performed based on the `X-User-ID` header and the `waller-id` UUIDs provided.
-* Transactional isolation level read-commited is used
+* Go-Fiber framework used to faster development of the APIs.
+<br><br>
+* API authentication not implemented. Therefore, wallet and user association is performed based on the `X-User-ID` header and the `waller-id` UUIDs in the request.
+<br><br>
+* Read commited transaction isolation level is used with consistency handling at application level to prevent non-repeatable reads or phantom reads. 
+<br><br>
+* Idempotency token is used to avoid duplicate operations from API consumers. Since it's easier to manager the idempotency cleanup with a cache TTL, Redis is used as the idempotency token store.
+<br><br>
+* APIs providing multiple results (ex: Get Transactions API) are paginated for better performance.
+<br><br>
+* Implementation follows dependency inversion principal, i.e. high level components do not rely on low level components, instead they rely on abstraction. Ex: database and cache implementation rely on interfaces and decoupled from postgres and redis.
+<br><br>
+* Payload and attributes are validated and the responses are structured, errors properly handled and includes most appropriate HTTP codes.
+<br><br>
+* Caching not implemented at Get Balance API because then it needs to be a write-through cache and needs more effort to maintain cache consistency with the database.
+<br><br>
+* Database tables (included in migration/init.sql) uses a trigger to validate wallet amount at each transaction to ensure the wallet balance does not go below zero.
+<br><br>
+* Application is containerized to run seamlessly.
+<br><br>
+* A user management endpoint available to easily create users and wallets.
