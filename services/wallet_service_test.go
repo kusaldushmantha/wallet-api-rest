@@ -264,6 +264,17 @@ func TestWalletServiceV1_Transfer(t *testing.T) {
 	amount := 120.0
 	userID := "2222"
 
+	t.Run("should return bad request response if the to account and from account is same", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		databaseMock := mocks2.NewMockDatabase(ctrl)
+		walletService := walletServiceV1{DB: databaseMock}
+		resp := walletService.Transfer(context.Background(), idempotencyKey, fromAccount, fromAccount, amount, userID)
+		assert.NotNil(t, resp)
+		assert.Equal(t, http.StatusBadRequest, resp.Status)
+		assert.Equal(t, "cannot transfer between same accounts", resp.Message)
+	})
+
 	t.Run("should return bad request response if the user is not authorized for the wallet", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
