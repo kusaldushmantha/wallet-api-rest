@@ -1,177 +1,246 @@
 # Wallet API
 
-## APIs
+A RESTful service for managing digital wallets, supporting operations such as deposits, withdrawals, transfers, balance inquiries, and transaction history retrieval. Built with [Go Fiber](https://gofiber.io/) for high performance and rapid development.
 
-### Wallet related APIs
+---
 
-* Deposit API
-    * Description: Deposits a provided amount to the given wallet uuid.
-    * Endpoint: `POST http://localhost:8080/wallet/v1/{wallet-uuid}/deposit`
-    * Mandatory headers: `X-User-ID = <user-uuid>`
-    * Responses:
-        * 200 - Success.
-        * 400 - Bad Request - Mandatory header `X-User-ID` not provided.
-        * 400 - Bad Request - Mandatory `amount` and `idempotency_token` json attributes not found in the payload.
-          `amount` should be positive and `idempotency_token` should be a unique string per request.
-        * 401 - Unauthorized - Provided `wallet-id` in the path does not belong to the provided `X-User-ID` user.
-        * 409 - Conflict - Provided `idempotency_token` is already available indicating the request is a duplicate
-          request.
-        * 500 - Internal Server Error.
-    * Sample curl:
+## Table of Contents
 
-```
-curl --request POST \
-  --url http://localhost:8080/wallet/v1/7dbacf5d-3099-4a66-ad3d-2fee93970017/deposit \
+- [API Endpoints](#api-endpoints)
+    - [Wallet Operations](#wallet-operations)
+    - [User Management](#user-management)
+- [Design Overview](#design-overview)
+- [Setup & Running](#setup--running)
+- [Testing](#testing)
+- [Known Limitations](#known-limitations)
+- [Future Improvements](#future-improvements)
+
+---
+
+## API Endpoints
+
+### Wallet Operations
+
+#### 1. Deposit
+
+- **Endpoint:** `POST /wallet/v1/{wallet-uuid}/deposit`
+- **Headers:**
+    - `X-User-ID: <user-uuid>`
+- **Sample request:**
+  ```shell
+  curl --request POST \
+  --url http://127.0.0.1:8080/wallet/v1/7dbacf5d-3099-4a66-ad3d-2fee93970017/deposit \
   --header 'content-type: application/json' \
   --header 'x-user-id: 0a644be3-cdf9-4491-b4ba-1cd8974c0278' \
   --data '{
-  "amount": 250,
-  "idempotency_token": "ccc"
-}'
-```
+      "amount": 250,
+      "idempotency_token": "unique-token"
+    }'
+  ```
+- **Responses:**
+    - `200 OK` – Deposit successful.
+    - `400 Bad Request` – Missing headers or payload attributes.
+    - `401 Unauthorized` – Wallet does not belong to the user.
+    - `409 Conflict` – Duplicate `idempotency_token`.
+    - `500 Internal Server Error` - Service error
 
-* Withdraw API
-    * Description: Withdraw an amount from the given wallet uuid if there are enough funds in the wallet.
-    * Endpoint: `POST http://localhost:8080/wallet/v1/{wallet-uuid}/withdraw`
-    * Mandatory headers: `X-User-ID = <user-uuid>`
-    * Responses:
-        * 200 - Success.
-        * 400 - Bad Request - Mandatory header `X-User-ID` not provided.
-        * 400 - Bad Request - Mandatory `amount` and `idempotency_token` json attributes not found in the payload.
-          `amount` should be positive and `idempotency_token` should be a unique string per request.
-        * 401 - Unauthorized - Provided `wallet-id` in the path does not belong to the provided `X-User-ID` user.
-        * 409 - Conflict - Provided `idempotency_token` is already available indicating the request is a duplicate
-          request.
-        * 500 - Internal Server Error.
-    * Sample curl:
+#### 2. Withdraw
 
-```
-curl --request POST \
+- **Endpoint:** `POST /wallet/v1/{wallet-uuid}/withdraw`
+- **Headers:**
+    - `X-User-ID: <user-uuid>`
+- **Sample request:**
+- 
+  ```shell
+  curl --request POST \
   --url http://localhost:8080/wallet/v1/7dbacf5d-3099-4a66-ad3d-2fee93970017/withdraw \
   --header 'content-type: application/json' \
   --header 'user-id: 0a644be3-cdf9-4491-b4ba-1cd8974c0278' \
   --data '{
-  "amount": 50.75,
-  "idempotency_token": "ccc"
-}'
-```
+      "amount": 5,
+      "idempotency_token": "ccc"
+    }'
+  ```
+- **Responses:**
+    - `200 OK` – Withdrawal successful.
+    - `400 Bad Request` – Missing headers or payload attributes.
+    - `401 Unauthorized` – Wallet does not belong to the user.
+    - `409 Conflict` – Duplicate `idempotency_token`.
+    - `500 Internal Server Error` - Service error.
 
-* Transfer API
-    * Description: Transfer an amount from a wallet uuid to a given recipient wallet id given the source wallet has
-      enough funds and the recipient wallet exists.
-    * Endpoint: `POST http://localhost:8080/wallet/v1/{wallet-uuid}/transfer`
-    * Mandatory headers: `X-User-ID = <user-uuid>`
-    * Responses:
-        * 200 - Success.
-        * 400 - Bad Request - Mandatory header `X-User-ID` not provided.
-        * 400 - Bad Request - Mandatory `amount`, `idempotency_token`, `recipient_wallet_id` json attributes not found
-          in the payload. `amount` should be positive and `idempotency_token` should be a unique string per request.
-          source account should have enough funds. `recipient_wallet_id` should be valid and existing.
-        * 400 - Bad Request - Source and destination wallets are same.
-        * 401 - Unauthorized - Provided `wallet-id` in the path does not belong to the provided `X-User-ID` user.
-        * 409 - Conflict - Provided `idempotency_token` is already available indicating the request is a duplicate
-          request.
-        * 500 - Internal Server Error.
-    * Sample curl:
+#### 3. Transfer
 
-```
-curl --request POST \
+- **Endpoint:** `POST /wallet/v1/{wallet-uuid}/transfer`
+- **Headers:**
+    - `X-User-ID: <user-uuid>`
+- **Sample request:**
+  ```shell
+  curl --request POST \
   --url http://localhost:8080/wallet/v1/7dbacf5d-3099-4a66-ad3d-2fee93970017/transfer \
   --header 'content-type: application/json' \
   --header 'x-user-id: 0a644be3-cdf9-4491-b4ba-1cd8974c0278' \
   --data '{
-  "amount":100,
-  "recipient_wallet_id": "2cbcd158-56d2-4d45-8113-d51adf9ef57a",
-  "idempotency_token": "gggg"
-}'
-```
+      "amount":100,
+      "recipient_wallet_id": "2cbcd158-56d2-4d45-8113-d51adf9ef57a",
+      "idempotency_token": "unique-token"
+    }'
+  ```
+- **Responses:**
+    - `200 OK` – Transfer successful.
+    - `400 Bad Request` – Missing headers or payload attributes, or invalid transfer details.
+    - `401 Unauthorized` – Wallet does not belong to the user.
+    - `409 Conflict` – Duplicate `idempotency_token`.
+    - `500 Internal Server Error` - Server error.
 
-* Get Balance API
-    * Description: Retrieves the wallet balance.
-    * Endpoint: `GET http://localhost:8080/wallet/v1/{wallet-uuid}/balance`
-    * Mandatory headers: `X-User-ID = <user-uuid>`
-    * Responses:
-        * 200 - Success.
-        * 400 - Bad Request - Mandatory header `X-User-ID` not provided.
-        * 401 - Unauthorized - Provided `wallet-id` in the path does not belong to the provided `X-User-ID` user.
-        * 500 - Internal Server Error.
-    * Sample curl:
+#### 4. Get Balance
 
-```
+- **Endpoint:** `GET /wallet/v1/{wallet-uuid}/balance`
+- **Headers:**
+    - `X-User-ID: <user-uuid>`
+- **Sample request:**
+  ```shell
+  curl --request GET \
+  --url http://localhost:8080/wallet/v1/7dbacf5d-3099-4a66-ad3d-2fee93970017/balance \
+  --header 'x-user-id: 0a644be3-cdf9-4491-b4ba-1cd8974c0278'
+  ```
+- **Responses:**
+    - `200 OK` – Returns current wallet balance.
+    - `400 Bad Request` – Missing `X-User-ID` header.
+    - `401 Unauthorized` – Wallet does not belong to the user.
+    - `500 Internal Server Error`
+
+#### 5. Get Transactions
+
+- **Endpoint:** `GET /wallet/v1/{wallet-uuid}/transactions`
+- **Headers:**
+    - `X-User-ID: <user-uuid>`
+- **Sample request:**
+```shell
 curl --request GET \
-  --url http://localhost:8080/wallet/v1/2cbcd158-56d2-4d45-8113-d51adf9ef57a/balance \
-  --header 'x-user-id: abe1f04a-68df-4e13-bd0d-5365ca9fdb0e'
-```
-
-* Get Transactions API
-    * Description: Retrieves the transactions for the provided wallet in chronological descending order.
-    * Endpoint: `GET http://localhost:8080/wallet/v1/{wallet-uuid}/transactions`
-    * Mandatory headers: `X-User-ID = <user-uuid>`
-    * Responses:
-        * 200 - Success.
-        * 400 - Bad Request - Mandatory header `X-User-ID` not provided.
-        * 401 - Unauthorized - Provided `wallet-id` in the path does not belong to the provided `X-User-ID` user.
-        * 500 - Internal Server Error.
-    * Sample curl:
-
-```
-curl --request GET \
-  --url http://localhost:8080/wallet/v1/7dbacf5d-3099-4a66-ad3d-2fee93970017/transactions \
+  --url http://localhost:8080/wallet/v1/7dbacf5d-3099-4a66-ad3d-2fee93970017/transactions?limit=10&offset=0 \
   --header 'x-user-id: 0a644be3-cdf9-4491-b4ba-1cd8974c0278'
 ```
+- **Responses:**
+    - `200 OK` – Returns list of transactions in descending chronological order.
+    - `400 Bad Request` – Missing `X-User-ID` header.
+    - `401 Unauthorized` – Wallet does not belong to the user.
+    - `500 Internal Server Error`
 
-### User management APIs
+### User Management
 
-**NOTE:** User management APIs are helper APIs to create users, associated wallets, and retrieve them. This is not for
-evaluation.
+> **Note:** These endpoints are auxiliary to help create users and their wallets easily. Please do not evaluate these endpoints.
 
-* Create Users and Wallets API
-    * Description: Creates and user and a wallet for that user and provides the user uuid and wallet uuid
-    * Endpoint: `POST http://localhost:8080/user-management/v1`
-    * Mandatory headers: N/A
-    * Responses:
-        * 200 - Success.
-        * 500 - Internal Server Error.
-    * Sample curl:
+#### 1. Create User and Wallet
 
+- **Endpoint:** `POST /user-management/v1/`
+- **Responses:**
+    - `200 OK` – Returns newly created user and wallet UUIDs.
+    - `500 Internal Server Error`
+
+#### 2. Get Users and Wallets
+
+- **Endpoint:** `GET /user-management/v1/`
+- **Responses:**
+    - `200 OK` – Returns list of users and their associated wallets.
+    - `500 Internal Server Error`
+
+---
+
+## Effort
+>This service design and implementation was done within 72 hours.
+
+---
+
+## Design Overview
+> **Note:** Design concentration is purely for the functional and non-functional requirements of the wallet service.
+
+- **Framework:** Utilizes [Go Fiber](https://gofiber.io/), inspired by Express.js, for building fast and scalable web applications.
+- **Authentication:** Currently, no request authentication mechanism is implemented. User identification is based on the `X-User-ID` header.
+- **Concurrency Control:**
+    - Employs PostgreSQL's `READ COMMITTED` isolation level to prevent dirty reads.
+    - Uses `SELECT ... FOR UPDATE` statements to lock rows during transactions, ensuring data consistency.
+- **Idempotency:**
+    - Implements idempotency tokens to prevent duplicate create and update operations.
+    - Tokens are stored in Redis with a TTL to manage their lifecycle.
+- **Architecture:**
+    - Adheres to the [Dependency Inversion Principle](https://en.wikipedia.org/wiki/Dependency_inversion_principle), promoting decoupled and modular code. Low level modules such as databases and caches are exposed via interfaces and are decoupled from the application.
+- **Validation and Error Handling:**
+    - All payloads and attributes undergo validation.
+    - Errors are handled gracefully with appropriate HTTP status codes and messages.
+- **Database Integrity:**
+    - Triggers in the database ensure that wallet balances do not go below zero after transactions.
+- **Containerization:**
+    - The application is containerized using Docker for consistent deployment across environments.
+- **Logging and monitoring:**
+    - Information and errors logged properly with appropriate log levels.
+    - All the transaction specific information logged properly without exposing sensitive data to support reconciliation actions on database transaction mismatch.
+
+---
+
+## Setup & Running
+
+### Prerequisites
+
+- [Docker](https://www.docker.com/) installed on your machine.
+
+### Running the Service
+
+1. **Start the application:**
+   ```bash
+   docker-compose up
+   ```
+2. **Accessing the API:**
+    - Base URL: `http://localhost:8080/wallet/v1/`
+3. **Stopping the application:**
+   ```bash
+   docker-compose down
+   ```
+
+### Seed Data
+
+Upon initialization, the following users and wallets are created with a balance of 0:
+
+- **User 01:**
+    - User UUID: `0a644be3-cdf9-4491-b4ba-1cd8974c0278`
+    - Wallet UUID: `7dbacf5d-3099-4a66-ad3d-2fee93970017`
+- **User 02:**
+    - User UUID: `abe1f04a-68df-4e13-bd0d-5365ca9fdb0e`
+    - Wallet UUID: `2cbcd158-56d2-4d45-8113-d51adf9ef57a`
+
+---
+
+## Testing
+
+- **Unit Tests:** Written using `gomock` and `testify`.
+- **Integration Tests:** Use PostgreSQL test containers.
+- **Run Tests:**
+  ```bash
+  make test
+  ```
+
+---
+
+## Known Limitations
+
+- No proper request authentication for endpoints.
+- No caching on retrieval endpoints.
+- Requires database lookups for wallet and user existence validation.
+- Uses row locking with `SELECT ... FOR UPDATE` queries instead of optimistic locking.
+
+---
+
+## Future Improvements
+
+- Add proper request authentication with cookies or JWT tokens.
+- Implement write-through caching that can be leveraged in retrieval endpoints. Write through caching is used to ensure consistency with the database.
+- Consider Bloom filters and optimistic locking for faster database operations on concurrency and lookups.
+- Improve payload validation and observability.
+
+---
+
+## Local Development
+
+```bash
+make build
+make run
 ```
-curl --request POST \
-  --url http://localhost:8080/user-management/v1/
-```
-
-* Get Users and Wallets
-    * Description: Retrieve user uuid and their associated wallet uuids.
-    * Endpoint: `GET http://localhost:8080/user-management/v1`
-    * Mandatory headers: N/A
-    * Responses:
-        * 200 - Success.
-        * 500 - Internal Server Error.
-    * Sample curl:
-
-```
-curl --request GET \
-  --url http://localhost:8080/user-management/v1/
-```
-
-## Design Decisions
-* Go-Fiber framework used to faster development of the APIs.
-<br><br>
-* API authentication not implemented. Therefore, wallet and user association is performed based on the `X-User-ID` header and the `waller-id` UUIDs in the request.
-<br><br>
-* Read commited transaction isolation level is used with consistency handling at application level to prevent non-repeatable reads or phantom reads. 
-<br><br>
-* Idempotency token is used to avoid duplicate operations from API consumers. Since it's easier to manager the idempotency cleanup with a cache TTL, Redis is used as the idempotency token store.
-<br><br>
-* APIs providing multiple results (ex: Get Transactions API) are paginated for better performance.
-<br><br>
-* Implementation follows dependency inversion principal, i.e. high level components do not rely on low level components, instead they rely on abstraction. Ex: database and cache implementation rely on interfaces and decoupled from postgres and redis.
-<br><br>
-* Payload and attributes are validated and the responses are structured, errors properly handled and includes most appropriate HTTP codes.
-<br><br>
-* Caching not implemented at Get Balance API because then it needs to be a write-through cache and needs more effort to maintain cache consistency with the database.
-<br><br>
-* Database tables (included in migration/init.sql) uses a trigger to validate wallet amount at each transaction to ensure the wallet balance does not go below zero.
-<br><br>
-* Application is containerized to run seamlessly.
-<br><br>
-* A user management endpoint available to easily create users and wallets.
