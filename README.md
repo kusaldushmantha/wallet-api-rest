@@ -194,6 +194,7 @@ curl --request GET \
    ```
 2. **Accessing the API:**
     - Base URL: `http://localhost:8080/wallet/v1/`
+    - If you are using [Bruno](https://www.usebruno.com/) api client, API collection can be found in `./bruno-api-collection` directory
 3. **Stopping the application:**
    ```bash
    docker-compose down
