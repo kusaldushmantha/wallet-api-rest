@@ -175,8 +175,9 @@ curl --request GET \
     - Adheres to the [Dependency Inversion Principle](https://en.wikipedia.org/wiki/Dependency_inversion_principle),
       promoting decoupled and modular code. Low level modules such as databases and caches are exposed via interfaces
       and are decoupled from the application.
+    - Uses Go best practises in project structure and maintaining modularity.
 - **Validation and Error Handling:**
-    - All payloads and attributes undergo validation.
+    - All request payloads and attributes undergo validation.
     - Errors are handled gracefully with appropriate HTTP status codes and messages.
 - **Database Integrity:**
     - Triggers in the database ensure that wallet balances do not go below zero after transactions.
@@ -187,7 +188,7 @@ curl --request GET \
     - All the transaction specific information logged properly without exposing sensitive data to support reconciliation
       actions on database transaction mismatch.
 - **Performance:**
-    - All the database read operations have a default 5s read timeout.
+    - All external connectors such as cache and database has proper connection and read timeouts set.
     - Idempotency keys stored in redis for faster retrieval and TTL based clean up and uses atomic `SETNX` redis
       operation.
 
