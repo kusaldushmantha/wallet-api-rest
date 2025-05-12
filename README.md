@@ -174,6 +174,9 @@ curl --request GET \
 - **Logging and monitoring:**
     - Information and errors logged properly with appropriate log levels.
     - All the transaction specific information logged properly without exposing sensitive data to support reconciliation actions on database transaction mismatch.
+- **Performance:**
+  - All the database read operations have a default 5s read timeout.
+  - Idempotency keys stored in redis for faster retrieval and TTL based clean up and uses atomic `SETNX` redis operation.
 
 ---
 
