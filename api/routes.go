@@ -1,10 +1,10 @@
 package api
 
 import (
-	"WalletApp/services"
 	"github.com/gofiber/fiber/v2"
 
 	"WalletApp/models/requests"
+	"WalletApp/services"
 )
 
 // API grouping
@@ -16,7 +16,7 @@ func setupAPIGroups(app *fiber.App, walletService services.WalletService, userSe
 	walletEndpoints.Get("/:id/balance", getBalanceHandler(walletService))
 	walletEndpoints.Get("/:id/transactions", getTransactionsHandler(walletService))
 
-	// This is a helper API to create users and wallets if needed.
+	// This is a helper API to create users and wallets if needed. Please do not evaluate these endpoints.
 	userManagementEndpoints := app.Group("/user-management/v1")
 	userManagementEndpoints.Post("/", createUserAndWalletHandler(userService))
 	userManagementEndpoints.Get("/", getWalletUsersHandler(userService))

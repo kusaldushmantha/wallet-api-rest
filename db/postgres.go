@@ -125,7 +125,9 @@ func (p *postgresDB) InsertTxnAndGetWalletBalance(ctx context.Context, fromAccou
 	// Check the balance of the source wallet before a withdrawal or transfer
 	if trsType == commons.TransactionTypeWithdraw || trsType == commons.TransactionTypeTransfer {
 		query := "SELECT balance FROM wallets WHERE id = $1 FOR UPDATE"
-		row := tx.QueryRowContext(ctx, query, fromAccount)
+		readCtx, cancel := withTimeout(ctx)
+		defer cancel()
+		row := tx.QueryRowContext(readCtx, query, fromAccount)
 		err = row.Scan(&balance)
 		if err != nil {
 			log.Errorf("transaction select error. from: %s | to: %s, amount: %f | type: %s | time: %s | error: %+v", fromAccount, toAccount, amount, trsType, time.Now(), err)
@@ -136,7 +138,7 @@ func (p *postgresDB) InsertTxnAndGetWalletBalance(ctx context.Context, fromAccou
 		}
 	}
 
-	// Insert transaction
+	// Insert transaction record
 	err = p.addTransactionRecord(tx, ctx, fromAccount, toAccount, amount, trsType)
 	if err != nil {
 		log.Errorf("transaction insert error. from: %s | to: %s, amount: %f | type: %s | time: %s | error: %+v", fromAccount, toAccount, amount, trsType, time.Now(), err)
@@ -145,7 +147,7 @@ func (p *postgresDB) InsertTxnAndGetWalletBalance(ctx context.Context, fromAccou
 
 	senderAmount := amount
 	receiverAmount := amount
-	// If it is not a deposit, then the amount should be negative
+	// If it is not a deposit, then the amount should be negative for sender
 	if trsType == commons.TransactionTypeWithdraw || trsType == commons.TransactionTypeTransfer {
 		senderAmount = -amount
 	}

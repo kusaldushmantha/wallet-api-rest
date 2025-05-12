@@ -19,7 +19,7 @@ func main() {
 	}
 	err := godotenv.Load(envFile)
 	if err != nil {
-		log.Warnf("no env file loaded from %s (might be set externally): %v", envFile, err)
+		log.Warnf("no env file loaded from %s err: %v", envFile, err)
 	}
 	api.Setup(app)
 	err = app.Listen(":8080")

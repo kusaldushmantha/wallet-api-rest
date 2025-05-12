@@ -3,10 +3,10 @@ package config
 import (
 	"context"
 	"fmt"
-	"github.com/gofiber/fiber/v2/log"
 	"os"
 	"strconv"
 
+	"github.com/gofiber/fiber/v2/log"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -15,6 +15,7 @@ func InitRedis() *redis.Client {
 	redisClient := redis.NewClient(&redis.Options{
 		Addr: os.Getenv("REDIS_ADDR"),
 		DB:   db,
+		// using default dial timeout, read timeouts etc.
 	})
 
 	_, err := redisClient.Ping(context.Background()).Result()

@@ -1,6 +1,8 @@
 # Wallet API
 
-A RESTful service for managing digital wallets, supporting operations such as deposits, withdrawals, transfers, balance inquiries, and transaction history retrieval. Built with [Go Fiber](https://gofiber.io/) for high performance and rapid development.
+A RESTful service for managing digital wallets, supporting operations such as deposits, withdrawals, transfers, balance
+inquiries, and transaction history retrieval. Built with [Go Fiber](https://gofiber.io/) for high performance and rapid
+development.
 
 ---
 
@@ -50,17 +52,17 @@ A RESTful service for managing digital wallets, supporting operations such as de
 - **Headers:**
     - `X-User-ID: <user-uuid>`
 - **Sample request:**
-- 
-  ```shell
-  curl --request POST \
-  --url http://localhost:8080/wallet/v1/7dbacf5d-3099-4a66-ad3d-2fee93970017/withdraw \
-  --header 'content-type: application/json' \
-  --header 'user-id: 0a644be3-cdf9-4491-b4ba-1cd8974c0278' \
-  --data '{
-      "amount": 5,
-      "idempotency_token": "ccc"
-    }'
-  ```
+-
+```shell
+curl --request POST \
+--url http://localhost:8080/wallet/v1/7dbacf5d-3099-4a66-ad3d-2fee93970017/withdraw \
+--header 'content-type: application/json' \
+--header 'user-id: 0a644be3-cdf9-4491-b4ba-1cd8974c0278' \
+--data '{
+    "amount": 5,
+    "idempotency_token": "ccc"
+  }'
+```
 - **Responses:**
     - `200 OK` – Withdrawal successful.
     - `400 Bad Request` – Missing headers or payload attributes.
@@ -115,11 +117,13 @@ A RESTful service for managing digital wallets, supporting operations such as de
 - **Headers:**
     - `X-User-ID: <user-uuid>`
 - **Sample request:**
+
 ```shell
 curl --request GET \
   --url http://localhost:8080/wallet/v1/7dbacf5d-3099-4a66-ad3d-2fee93970017/transactions?limit=10&offset=0 \
   --header 'x-user-id: 0a644be3-cdf9-4491-b4ba-1cd8974c0278'
 ```
+
 - **Responses:**
     - `200 OK` – Returns list of transactions in descending chronological order.
     - `400 Bad Request` – Missing `X-User-ID` header.
@@ -128,7 +132,8 @@ curl --request GET \
 
 ### User Management
 
-> **Note:** These endpoints are auxiliary to help create users and their wallets easily. Please do not evaluate these endpoints.
+> **Note:** These endpoints are auxiliary to help create users and their wallets easily. Please do not evaluate these
+> endpoints.
 
 #### 1. Create User and Wallet
 
@@ -147,15 +152,19 @@ curl --request GET \
 ---
 
 ## Effort
->This service design and implementation was done within 72 hours.
+
+> This service design and implementation was done within 72 hours.
 
 ---
 
 ## Design Overview
+
 > **Note:** Design concentration is purely for the functional and non-functional requirements of the wallet service.
 
-- **Framework:** Utilizes [Go Fiber](https://gofiber.io/), inspired by Express.js, for building fast and scalable web applications.
-- **Authentication:** Currently, no request authentication mechanism is implemented. User identification is based on the `X-User-ID` header.
+- **Framework:** Utilizes [Go Fiber](https://gofiber.io/), inspired by Express.js, for building fast and scalable web
+  applications.
+- **Authentication:** Currently, no request authentication mechanism is implemented. User identification is based on the
+  `X-User-ID` header.
 - **Concurrency Control:**
     - Employs PostgreSQL's `READ COMMITTED` isolation level to prevent dirty reads.
     - Uses `SELECT ... FOR UPDATE` statements to lock rows during transactions, ensuring data consistency.
@@ -163,7 +172,9 @@ curl --request GET \
     - Implements idempotency tokens to prevent duplicate create and update operations.
     - Tokens are stored in Redis with a TTL to manage their lifecycle.
 - **Architecture:**
-    - Adheres to the [Dependency Inversion Principle](https://en.wikipedia.org/wiki/Dependency_inversion_principle), promoting decoupled and modular code. Low level modules such as databases and caches are exposed via interfaces and are decoupled from the application.
+    - Adheres to the [Dependency Inversion Principle](https://en.wikipedia.org/wiki/Dependency_inversion_principle),
+      promoting decoupled and modular code. Low level modules such as databases and caches are exposed via interfaces
+      and are decoupled from the application.
 - **Validation and Error Handling:**
     - All payloads and attributes undergo validation.
     - Errors are handled gracefully with appropriate HTTP status codes and messages.
@@ -173,10 +184,12 @@ curl --request GET \
     - The application is containerized using Docker for consistent deployment across environments.
 - **Logging and monitoring:**
     - Information and errors logged properly with appropriate log levels.
-    - All the transaction specific information logged properly without exposing sensitive data to support reconciliation actions on database transaction mismatch.
+    - All the transaction specific information logged properly without exposing sensitive data to support reconciliation
+      actions on database transaction mismatch.
 - **Performance:**
-  - All the database read operations have a default 5s read timeout.
-  - Idempotency keys stored in redis for faster retrieval and TTL based clean up and uses atomic `SETNX` redis operation.
+    - All the database read operations have a default 5s read timeout.
+    - Idempotency keys stored in redis for faster retrieval and TTL based clean up and uses atomic `SETNX` redis
+      operation.
 
 ---
 
@@ -194,7 +207,8 @@ curl --request GET \
    ```
 2. **Accessing the API:**
     - Base URL: `http://localhost:8080/wallet/v1/`
-    - If you are using [Bruno](https://www.usebruno.com/) api client, API collection can be found in `./bruno-api-collection` directory
+    - If you are using [Bruno](https://www.usebruno.com/) api client, API collection can be found in
+      `./bruno-api-collection` directory
 3. **Stopping the application:**
    ```bash
    docker-compose down
@@ -216,6 +230,7 @@ Upon initialization, the following users and wallets are created with a balance 
 ## Testing
 
 - **Unit Tests:** Written using `gomock` and `testify`.
+- **Mocks:** Mocks generated with `mockgen`
 - **Integration Tests:** Use PostgreSQL test containers.
 - **Run Tests:**
   ```bash
@@ -236,7 +251,8 @@ Upon initialization, the following users and wallets are created with a balance 
 ## Future Improvements
 
 - Add proper request authentication with cookies or JWT tokens.
-- Implement write-through caching that can be leveraged in retrieval endpoints. Write through caching is used to ensure consistency with the database.
+- Implement write-through caching that can be leveraged in retrieval endpoints. Write through caching is used to ensure
+  consistency with the database.
 - Consider Bloom filters and optimistic locking for faster database operations on concurrency and lookups.
 - Improve payload validation and observability.
 
