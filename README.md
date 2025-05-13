@@ -180,7 +180,7 @@ curl --request GET \
     - All request payloads and attributes undergo validation.
     - Errors are handled gracefully with appropriate HTTP status codes and messages.
 - **Database Integrity:**
-    - Triggers in the database ensure that wallet balances do not go below zero after transactions.
+    - Triggers in the database ensure that wallet balances do not go below zero after transactions. See `./migration/init.sql` for schema related info.
 - **Containerization:**
     - The application is containerized using Docker for consistent deployment across environments.
 - **Logging and monitoring:**
