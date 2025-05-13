@@ -168,7 +168,7 @@ curl --request GET \
 - **Authentication:** Currently, no request authentication mechanism is implemented. User identification is based on the
   `X-User-ID` header.
 - **Concurrency Control:**
-    - Employs PostgreSQL's `READ COMMITTED` isolation level to prevent dirty reads.
+    - Employs `SERIALIZABLE` isolation level to prevent concurrency issues when updating wallets and transaction related information.
     - Uses `SELECT ... FOR UPDATE` statements to lock rows during transactions, ensuring data consistency.
 - **Idempotency:**
     - Implements idempotency tokens to prevent duplicate create and update operations.
@@ -193,6 +193,7 @@ curl --request GET \
     - All external connectors such as cache and database has proper connection and read timeouts set.
     - Idempotency keys stored in redis for faster retrieval and TTL based clean up and uses atomic `SETNX` redis
       operation.
+    - Instead of setting database level transactional isolation level, query level isolation is used for better performance.
 
 ---
 

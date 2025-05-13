@@ -88,7 +88,9 @@ func (p *postgresDB) GetTransactions(ctx context.Context, walletID string, limit
 
 func (p *postgresDB) InsertTxnAndGetWalletBalance(ctx context.Context, fromAccount string, toAccount string, amount float64, trsType commons.TransactionType) (float64, error) {
 	// Transactional operation to perform atomic update in transaction table and wallet table
-	tx, err := p.db.BeginTx(ctx, &sql.TxOptions{})
+	tx, err := p.db.BeginTx(ctx, &sql.TxOptions{
+		Isolation: sql.LevelSerializable,
+	})
 	if err != nil {
 		log.Errorf("error creating a transactional context: %v", err)
 		return -1, err

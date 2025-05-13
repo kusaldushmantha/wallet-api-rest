@@ -70,7 +70,7 @@ func TestDepositHandler(t *testing.T) {
 		setupAPIGroups(app, mockWalletService, nil)
 
 		req := httptest.NewRequest("POST", "/wallet/v1/2ad7eec6-51f3-409f-9e82-582a68417f6f/deposit",
-			strings.NewReader(`{"amount": 100, "idempotency_token": "gggg"}`))
+			strings.NewReader(`{"amount": 100, "idempotency_token": "abcd-efgh-ijkl"}`))
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("X-User-ID", "user-123")
 		resp, err := app.Test(req, -1)
@@ -128,7 +128,7 @@ func TestDepositHandler(t *testing.T) {
 		setupAPIGroups(app, mockWalletService, nil)
 
 		req := httptest.NewRequest("POST", "/wallet/v1/2ad7eec6-51f3-409f-9e82-582a68417f6f/deposit",
-			strings.NewReader(`{"amount": 100, "idempotency_token": "gggg"}`))
+			strings.NewReader(`{"amount": 100, "idempotency_token": "abcd-efgh-ijkl"}`))
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("X-User-ID", "user-123")
 		resp, err := app.Test(req, -1)
@@ -196,7 +196,7 @@ func TestWithdrawHandler(t *testing.T) {
 		setupAPIGroups(app, mockWalletService, nil)
 
 		req := httptest.NewRequest("POST", "/wallet/v1/2ad7eec6-51f3-409f-9e82-582a68417f6f/withdraw",
-			strings.NewReader(`{"amount": 100, "idempotency_token": "gggg"}`))
+			strings.NewReader(`{"amount": 100, "idempotency_token": "abcd-efgh-ijkl"}`))
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("X-User-ID", "user-123")
 		resp, err := app.Test(req, -1)
@@ -234,7 +234,7 @@ func TestWithdrawHandler(t *testing.T) {
 		setupAPIGroups(app, mockWalletService, nil)
 
 		req := httptest.NewRequest("POST", "/wallet/v1/2ad7eec6-51f3-409f-9e82-582a68417f6f/withdraw",
-			strings.NewReader(`{"amount": 100, "idempotency_token": "gggg"}`))
+			strings.NewReader(`{"amount": 100, "idempotency_token": "abcd-efgh-ijkl"}`))
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("X-User-ID", "user-123")
 		resp, err := app.Test(req, -1)
@@ -334,7 +334,7 @@ func TestTransferHandler(t *testing.T) {
 			strings.NewReader(`{
 				  "amount":100,
 				  "recipient_wallet_id": "2cbcd158-56d2-4d45-8113-d51adf9ef57a",
-				  "idempotency_token": "gggg"
+				  "idempotency_token": "abcd-efgh-ijkl"
 				}`))
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("X-User-ID", "user-123")
@@ -376,7 +376,7 @@ func TestTransferHandler(t *testing.T) {
 			strings.NewReader(`{
 				  "amount":100,
 				  "recipient_wallet_id": "2cbcd158-56d2-4d45-8113-d51adf9ef57a",
-				  "idempotency_token": "gggg"
+				  "idempotency_token": "abcd-efgh-ijkl"
 				}`))
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("X-User-ID", "user-123")
