@@ -16,6 +16,7 @@ development.
 - [Testing](#testing)
 - [Known Limitations](#known-limitations)
 - [Future Improvements](#future-improvements)
+- [Project Structure Overview](#project-structure-overview)
 
 ---
 
