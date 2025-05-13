@@ -53,7 +53,6 @@ development.
 - **Headers:**
     - `X-User-ID: <user-uuid>`
 - **Sample request:**
--
 
 ```shell
 curl --request POST \
