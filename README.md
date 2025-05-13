@@ -53,6 +53,7 @@ development.
     - `X-User-ID: <user-uuid>`
 - **Sample request:**
 -
+
 ```shell
 curl --request POST \
 --url http://localhost:8080/wallet/v1/7dbacf5d-3099-4a66-ad3d-2fee93970017/withdraw \
@@ -63,6 +64,7 @@ curl --request POST \
     "idempotency_token": "ccc"
   }'
 ```
+
 - **Responses:**
     - `200 OK` – Withdrawal successful.
     - `400 Bad Request` – Missing headers or payload attributes.
@@ -153,7 +155,7 @@ curl --request GET \
 
 ## Effort
 
-> This service design and implementation was done within 72 hours.
+> This service design and implementation was done in 72 hours.
 
 ---
 
@@ -265,3 +267,32 @@ Upon initialization, the following users and wallets are created with a balance 
 make build
 make run
 ```
+
+## Project Structure Overview
+
+- `api/routes.go` - API route handling and payload validation.
+- `api/setup.go` - Service setup logic.
+- `api/utils.go` - Utility functions used for validation and for functionality within `api` directory.
+- `bruno-api-collection` - API collection used to test the service with Bruno API client.
+- `cmd/server/main.go` - Environment variable loading and service startup.
+- `commons/constants.go` - Constants used within the service.
+- `commons/types.go` - Common types used within the service.
+- `config/postgresql.go` - Configuration related to PostgreSQL database.
+- `config/redis.go` - Configuration related to Redis.
+- `db/mocks/*` - Mocks related to PostgreSQL and Redis.
+- `db/postgres.go` - PostgreSQL client and relational queries.
+- `db/redis.go` - Redis client and implementation.
+- `db/types.go` - Interface containing methods for the database and cache.
+- `migration/init.sql` - Initial database seed script and schema script.
+- `models/requests/types.go` - Request types.
+- `models/responses/types.go` - Response types.
+- `models/transaction.go` - Transaction table model.
+- `models/user.go` - User table model.
+- `models/wallet.go` - Wallet table model.
+- `services/mocks/*` - Mocks for services.
+- `services/user-service.go` - User service implementation.
+- `services/wallet-service.go` - Wallet service implementation.
+- `services/types.go` - Types used for services.
+- `services/helpers.go` - Helpers used within services.
+- `.env.docker` - Environment file to use in docker.
+- `.env.local` - Environment file to use for local development.

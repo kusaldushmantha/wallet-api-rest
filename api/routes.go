@@ -30,6 +30,9 @@ func depositHandler(walletService services.WalletService) fiber.Handler {
 			return badRequest(c, err.Error())
 		}
 		walletID := c.Params("id")
+		if err := validateUUID(walletID); err != nil {
+			return badRequest(c, "invalid wallet ID: must be a valid UUID")
+		}
 		var req requests.DepositRequest
 		if err := payloadValidation(c, &req); err != nil {
 			return badRequest(c, err.Error())
@@ -49,6 +52,9 @@ func withdrawHandler(walletService services.WalletService) fiber.Handler {
 		}
 
 		walletID := c.Params("id")
+		if err := validateUUID(walletID); err != nil {
+			return badRequest(c, "invalid wallet ID: must be a valid UUID")
+		}
 		var req requests.WithdrawRequest
 		if err := payloadValidation(c, &req); err != nil {
 			return badRequest(c, err.Error())
@@ -68,6 +74,9 @@ func transferHandler(walletService services.WalletService) fiber.Handler {
 		}
 
 		walletID := c.Params("id")
+		if err := validateUUID(walletID); err != nil {
+			return badRequest(c, "invalid wallet ID: must be a valid UUID")
+		}
 		var req requests.TransferRequest
 		if err := payloadValidation(c, &req); err != nil {
 			return badRequest(c, err.Error())
@@ -87,6 +96,9 @@ func getBalanceHandler(walletService services.WalletService) fiber.Handler {
 		}
 
 		walletID := c.Params("id")
+		if err := validateUUID(walletID); err != nil {
+			return badRequest(c, "invalid wallet ID: must be a valid UUID")
+		}
 		resp := walletService.GetBalance(ctx, walletID, userID)
 		return response(c, resp)
 	}
@@ -101,6 +113,9 @@ func getTransactionsHandler(walletService services.WalletService) fiber.Handler 
 		}
 
 		walletID := c.Params("id")
+		if err := validateUUID(walletID); err != nil {
+			return badRequest(c, "invalid wallet ID: must be a valid UUID")
+		}
 		// Use query params for pagination
 		limit := parseQueryInt(c.Query("limit"), 10)
 		offset := parseQueryInt(c.Query("offset"), 0)
