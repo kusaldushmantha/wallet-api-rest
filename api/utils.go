@@ -79,8 +79,8 @@ func validateIdempotencyToken(token string) error {
 	if token == "" {
 		return errors.New("missing idempotency token")
 	}
-	if len(token) < 8 || len(token) > 20 {
-		return errors.New("idempotency token must be between 8 and 20 characters")
+	if len(token) < 8 || len(token) > 50 {
+		return errors.New("idempotency token must be between 8 and 50 characters")
 	}
 	return nil
 }

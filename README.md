@@ -32,12 +32,12 @@ development.
 - **Sample request:**
   ```shell
   curl --request POST \
-  --url http://127.0.0.1:8080/wallet/v1/7dbacf5d-3099-4a66-ad3d-2fee93970017/deposit \
+  --url http://localhost:8080/wallet/v1/7dbacf5d-3099-4a66-ad3d-2fee93970017/deposit \
   --header 'content-type: application/json' \
   --header 'x-user-id: 0a644be3-cdf9-4491-b4ba-1cd8974c0278' \
   --data '{
       "amount": 250,
-      "idempotency_token": "unique-token"
+      "idempotency_token": "unique-idempotency-token"
     }'
   ```
 - **Responses:**
@@ -59,10 +59,10 @@ development.
 curl --request POST \
 --url http://localhost:8080/wallet/v1/7dbacf5d-3099-4a66-ad3d-2fee93970017/withdraw \
 --header 'content-type: application/json' \
---header 'user-id: 0a644be3-cdf9-4491-b4ba-1cd8974c0278' \
+--header 'x-user-id: 0a644be3-cdf9-4491-b4ba-1cd8974c0278' \
 --data '{
     "amount": 5,
-    "idempotency_token": "ccc"
+    "idempotency_token": "unique-idempotency-token"
   }'
 ```
 
