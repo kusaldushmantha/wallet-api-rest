@@ -155,7 +155,7 @@ curl --request GET \
 
 ## Effort
 
-> This service design and implementation was done in 72 hours.
+> This service design and implementation was done in 80 hours.
 
 ---
 
