@@ -232,6 +232,7 @@ Upon initialization, the following users and wallets are created with a balance 
 ---
 
 ## Testing
+> **Note:** Requires docker to run the integration tests. Before running the tests, make sure no PostgreSQL containers are running in docker.
 
 - **Unit Tests:** Written using `gomock` and `testify`.
 - **Mocks:** Mocks generated with `mockgen`

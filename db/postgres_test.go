@@ -2,6 +2,7 @@ package db_test
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -10,7 +11,8 @@ import (
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/assert"
-	"github.com/testcontainers/testcontainers-go/modules/postgres"
+	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/wait"
 
 	"WalletApp/commons"
 	"WalletApp/db"
@@ -19,14 +21,36 @@ import (
 func TestInsertTxnAndGetWalletBalance(t *testing.T) {
 	ctx := context.Background()
 
-	pgContainer, err := postgres.Run(ctx, "postgres:15", postgres.WithDatabase("walletdb"),
-		postgres.WithUsername("testuser"), postgres.WithPassword("testpass"))
-	assert.NoError(t, err)
-
-	connStr, err := pgContainer.ConnectionString(ctx, "sslmode=disable")
-	if err != nil {
-		t.Fatal("error while generating the connection string")
+	req := testcontainers.ContainerRequest{
+		Image:        "postgres:15",
+		ExposedPorts: []string{"5432/tcp"},
+		Env: map[string]string{
+			"POSTGRES_DB":       "walletdb",
+			"POSTGRES_USER":     "testuser",
+			"POSTGRES_PASSWORD": "testpass",
+		},
+		WaitingFor: wait.ForListeningPort("5432/tcp"),
 	}
+
+	pgContainer, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+		ContainerRequest: req,
+		Started:          true,
+	})
+	if err != nil {
+		t.Error(err)
+	}
+
+	host, err := pgContainer.Host(ctx)
+	if err != nil {
+		t.Error(err)
+	}
+
+	mappedPort, err := pgContainer.MappedPort(ctx, "5432/tcp")
+	if err != nil {
+		t.Error(err)
+	}
+
+	connStr := fmt.Sprintf("postgres://testuser:testpass@%s:%s/walletdb?sslmode=disable", host, mappedPort.Port())
 
 	maxRetries := 10
 	var sqlxDB *sqlx.DB
